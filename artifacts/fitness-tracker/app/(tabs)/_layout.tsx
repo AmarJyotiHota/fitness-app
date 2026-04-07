@@ -24,6 +24,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "camera", selected: "camera.fill" }} />
         <Label>Food</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="insights">
+        <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
+        <Label>Insights</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person", selected: "person.fill" }} />
         <Label>Profile</Label>
@@ -61,16 +65,11 @@ function ClassicTabLayout() {
               style={StyleSheet.absoluteFill}
             />
           ) : isWeb ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.card },
-              ]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ) : null,
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",
-          fontSize: 11,
+          fontSize: 10,
           marginBottom: isWeb ? 8 : 0,
         },
       }}
@@ -81,9 +80,9 @@ function ClassicTabLayout() {
           title: "Dashboard",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={24} />
+              <SymbolView name="house" tintColor={color} size={22} />
             ) : (
-              <Feather name="home" size={22} color={color} />
+              <Feather name="home" size={20} color={color} />
             ),
         }}
       />
@@ -93,9 +92,9 @@ function ClassicTabLayout() {
           title: "Activity",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="figure.walk" tintColor={color} size={24} />
+              <SymbolView name="figure.walk" tintColor={color} size={22} />
             ) : (
-              <Feather name="activity" size={22} color={color} />
+              <Feather name="activity" size={20} color={color} />
             ),
         }}
       />
@@ -105,9 +104,21 @@ function ClassicTabLayout() {
           title: "Food",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="camera" tintColor={color} size={24} />
+              <SymbolView name="camera" tintColor={color} size={22} />
             ) : (
-              <Feather name="camera" size={22} color={color} />
+              <Feather name="camera" size={20} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="insights"
+        options={{
+          title: "Insights",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="chart.bar" tintColor={color} size={22} />
+            ) : (
+              <Feather name="bar-chart-2" size={20} color={color} />
             ),
         }}
       />
@@ -117,9 +128,9 @@ function ClassicTabLayout() {
           title: "Profile",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="person" tintColor={color} size={24} />
+              <SymbolView name="person" tintColor={color} size={22} />
             ) : (
-              <Feather name="user" size={22} color={color} />
+              <Feather name="user" size={20} color={color} />
             ),
         }}
       />

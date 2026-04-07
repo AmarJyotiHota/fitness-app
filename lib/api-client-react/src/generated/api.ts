@@ -31,7 +31,16 @@ import type {
   Goals,
   HealthStatus,
   LogFoodInput,
+  MealSuggestionsInput,
+  MealSuggestionsResponse,
+  StreakInfo,
   SuccessResponse,
+  WaterLog,
+  WaterLogInput,
+  WaterSummary,
+  WeeklyAnalytics,
+  WorkoutRecommendationsInput,
+  WorkoutRecommendationsResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -763,6 +772,483 @@ export function useGetFoodLogs<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetFoodLogsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get AI meal suggestions based on remaining calories
+ */
+export const getGetMealSuggestionsUrl = () => {
+  return `/api/ai/meal-suggestions`;
+};
+
+export const getMealSuggestions = async (
+  mealSuggestionsInput: MealSuggestionsInput,
+  options?: RequestInit,
+): Promise<MealSuggestionsResponse> => {
+  return customFetch<MealSuggestionsResponse>(getGetMealSuggestionsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(mealSuggestionsInput),
+  });
+};
+
+export const getGetMealSuggestionsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof getMealSuggestions>>,
+    TError,
+    { data: BodyType<MealSuggestionsInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof getMealSuggestions>>,
+  TError,
+  { data: BodyType<MealSuggestionsInput> },
+  TContext
+> => {
+  const mutationKey = ["getMealSuggestions"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof getMealSuggestions>>,
+    { data: BodyType<MealSuggestionsInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return getMealSuggestions(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GetMealSuggestionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof getMealSuggestions>>
+>;
+export type GetMealSuggestionsMutationBody = BodyType<MealSuggestionsInput>;
+export type GetMealSuggestionsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Get AI meal suggestions based on remaining calories
+ */
+export const useGetMealSuggestions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof getMealSuggestions>>,
+    TError,
+    { data: BodyType<MealSuggestionsInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof getMealSuggestions>>,
+  TError,
+  { data: BodyType<MealSuggestionsInput> },
+  TContext
+> => {
+  return useMutation(getGetMealSuggestionsMutationOptions(options));
+};
+
+/**
+ * @summary Get AI workout recommendations
+ */
+export const getGetWorkoutRecommendationsUrl = () => {
+  return `/api/ai/workout-recommendations`;
+};
+
+export const getWorkoutRecommendations = async (
+  workoutRecommendationsInput: WorkoutRecommendationsInput,
+  options?: RequestInit,
+): Promise<WorkoutRecommendationsResponse> => {
+  return customFetch<WorkoutRecommendationsResponse>(
+    getGetWorkoutRecommendationsUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(workoutRecommendationsInput),
+    },
+  );
+};
+
+export const getGetWorkoutRecommendationsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof getWorkoutRecommendations>>,
+    TError,
+    { data: BodyType<WorkoutRecommendationsInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof getWorkoutRecommendations>>,
+  TError,
+  { data: BodyType<WorkoutRecommendationsInput> },
+  TContext
+> => {
+  const mutationKey = ["getWorkoutRecommendations"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof getWorkoutRecommendations>>,
+    { data: BodyType<WorkoutRecommendationsInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return getWorkoutRecommendations(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GetWorkoutRecommendationsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof getWorkoutRecommendations>>
+>;
+export type GetWorkoutRecommendationsMutationBody =
+  BodyType<WorkoutRecommendationsInput>;
+export type GetWorkoutRecommendationsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Get AI workout recommendations
+ */
+export const useGetWorkoutRecommendations = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof getWorkoutRecommendations>>,
+    TError,
+    { data: BodyType<WorkoutRecommendationsInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof getWorkoutRecommendations>>,
+  TError,
+  { data: BodyType<WorkoutRecommendationsInput> },
+  TContext
+> => {
+  return useMutation(getGetWorkoutRecommendationsMutationOptions(options));
+};
+
+/**
+ * @summary Log water intake
+ */
+export const getLogWaterUrl = () => {
+  return `/api/water/log`;
+};
+
+export const logWater = async (
+  waterLogInput: WaterLogInput,
+  options?: RequestInit,
+): Promise<WaterLog> => {
+  return customFetch<WaterLog>(getLogWaterUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(waterLogInput),
+  });
+};
+
+export const getLogWaterMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof logWater>>,
+    TError,
+    { data: BodyType<WaterLogInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof logWater>>,
+  TError,
+  { data: BodyType<WaterLogInput> },
+  TContext
+> => {
+  const mutationKey = ["logWater"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof logWater>>,
+    { data: BodyType<WaterLogInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return logWater(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LogWaterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof logWater>>
+>;
+export type LogWaterMutationBody = BodyType<WaterLogInput>;
+export type LogWaterMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Log water intake
+ */
+export const useLogWater = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof logWater>>,
+    TError,
+    { data: BodyType<WaterLogInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof logWater>>,
+  TError,
+  { data: BodyType<WaterLogInput> },
+  TContext
+> => {
+  return useMutation(getLogWaterMutationOptions(options));
+};
+
+/**
+ * @summary Get today's water intake
+ */
+export const getGetTodayWaterUrl = () => {
+  return `/api/water/today`;
+};
+
+export const getTodayWater = async (
+  options?: RequestInit,
+): Promise<WaterSummary> => {
+  return customFetch<WaterSummary>(getGetTodayWaterUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTodayWaterQueryKey = () => {
+  return [`/api/water/today`] as const;
+};
+
+export const getGetTodayWaterQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTodayWater>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTodayWater>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTodayWaterQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTodayWater>>> = ({
+    signal,
+  }) => getTodayWater({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTodayWater>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTodayWaterQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTodayWater>>
+>;
+export type GetTodayWaterQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get today's water intake
+ */
+
+export function useGetTodayWater<
+  TData = Awaited<ReturnType<typeof getTodayWater>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTodayWater>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTodayWaterQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get weekly analytics breakdown by day
+ */
+export const getGetWeeklyAnalyticsUrl = () => {
+  return `/api/analytics/weekly`;
+};
+
+export const getWeeklyAnalytics = async (
+  options?: RequestInit,
+): Promise<WeeklyAnalytics> => {
+  return customFetch<WeeklyAnalytics>(getGetWeeklyAnalyticsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetWeeklyAnalyticsQueryKey = () => {
+  return [`/api/analytics/weekly`] as const;
+};
+
+export const getGetWeeklyAnalyticsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getWeeklyAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getWeeklyAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetWeeklyAnalyticsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getWeeklyAnalytics>>
+  > = ({ signal }) => getWeeklyAnalytics({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getWeeklyAnalytics>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetWeeklyAnalyticsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getWeeklyAnalytics>>
+>;
+export type GetWeeklyAnalyticsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get weekly analytics breakdown by day
+ */
+
+export function useGetWeeklyAnalytics<
+  TData = Awaited<ReturnType<typeof getWeeklyAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getWeeklyAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetWeeklyAnalyticsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get current activity streak
+ */
+export const getGetStreakUrl = () => {
+  return `/api/analytics/streak`;
+};
+
+export const getStreak = async (options?: RequestInit): Promise<StreakInfo> => {
+  return customFetch<StreakInfo>(getGetStreakUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStreakQueryKey = () => {
+  return [`/api/analytics/streak`] as const;
+};
+
+export const getGetStreakQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStreak>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getStreak>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStreakQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreak>>> = ({
+    signal,
+  }) => getStreak({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStreak>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStreakQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStreak>>
+>;
+export type GetStreakQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get current activity streak
+ */
+
+export function useGetStreak<
+  TData = Awaited<ReturnType<typeof getStreak>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getStreak>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStreakQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

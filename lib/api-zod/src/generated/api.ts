@@ -133,6 +133,107 @@ export const GetFoodLogsResponseItem = zod.object({
 export const GetFoodLogsResponse = zod.array(GetFoodLogsResponseItem);
 
 /**
+ * @summary Get AI meal suggestions based on remaining calories
+ */
+export const GetMealSuggestionsBody = zod.object({
+  remainingCalories: zod.number(),
+  mealType: zod.string().optional(),
+  dietaryPreferences: zod.string().optional(),
+});
+
+export const GetMealSuggestionsResponse = zod.object({
+  suggestions: zod.array(
+    zod.object({
+      name: zod.string(),
+      calories: zod.number(),
+      protein: zod.number().optional(),
+      carbs: zod.number().optional(),
+      fat: zod.number().optional(),
+      description: zod.string(),
+      prepTime: zod.string().optional(),
+    }),
+  ),
+  tip: zod.string().optional(),
+});
+
+/**
+ * @summary Get AI workout recommendations
+ */
+export const GetWorkoutRecommendationsBody = zod.object({
+  todaySteps: zod.number(),
+  weeklySteps: zod.number().optional(),
+  caloriesBurned: zod.number().optional(),
+  fitnessLevel: zod.enum(["beginner", "intermediate", "advanced"]).optional(),
+});
+
+export const GetWorkoutRecommendationsResponse = zod.object({
+  recommendations: zod.array(
+    zod.object({
+      name: zod.string(),
+      duration: zod.string(),
+      calories: zod.number().optional(),
+      intensity: zod.string().optional(),
+      description: zod.string(),
+      steps: zod.array(zod.string()).optional(),
+    }),
+  ),
+  motivationalMessage: zod.string(),
+});
+
+/**
+ * @summary Log water intake
+ */
+export const LogWaterBody = zod.object({
+  amount: zod.number().describe("Amount in ml"),
+});
+
+/**
+ * @summary Get today's water intake
+ */
+export const GetTodayWaterResponse = zod.object({
+  totalMl: zod.number(),
+  goalMl: zod.number(),
+  logs: zod.array(
+    zod.object({
+      id: zod.string(),
+      amount: zod.number(),
+      date: zod.string(),
+      time: zod.string().optional(),
+    }),
+  ),
+  percentage: zod.number(),
+});
+
+/**
+ * @summary Get weekly analytics breakdown by day
+ */
+export const GetWeeklyAnalyticsResponse = zod.object({
+  days: zod.array(
+    zod.object({
+      date: zod.string(),
+      day: zod.string(),
+      steps: zod.number(),
+      caloriesBurned: zod.number(),
+      caloriesConsumed: zod.number(),
+    }),
+  ),
+  averageSteps: zod.number(),
+  averageCaloriesBurned: zod.number(),
+  totalSteps: zod.number(),
+  bestDay: zod.string().optional(),
+});
+
+/**
+ * @summary Get current activity streak
+ */
+export const GetStreakResponse = zod.object({
+  currentStreak: zod.number(),
+  longestStreak: zod.number(),
+  lastActiveDate: zod.string().optional(),
+  streakDates: zod.array(zod.string()),
+});
+
+/**
  * @summary Admin login
  */
 export const AdminLoginBody = zod.object({

@@ -14,6 +14,12 @@ tags:
     description: Activity tracking
   - name: food
     description: Food calorie detection
+  - name: ai
+    description: AI-powered suggestions
+  - name: water
+    description: Water intake tracking
+  - name: analytics
+    description: Advanced analytics
   - name: admin
     description: Admin operations
 paths:
@@ -162,6 +168,102 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/FoodLog"
+
+  /ai/meal-suggestions:
+    post:
+      operationId: getMealSuggestions
+      tags: [ai]
+      summary: Get AI meal suggestions based on remaining calories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MealSuggestionsInput"
+      responses:
+        "200":
+          description: Meal suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MealSuggestionsResponse"
+
+  /ai/workout-recommendations:
+    post:
+      operationId: getWorkoutRecommendations
+      tags: [ai]
+      summary: Get AI workout recommendations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkoutRecommendationsInput"
+      responses:
+        "200":
+          description: Workout recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutRecommendationsResponse"
+
+  /water/log:
+    post:
+      operationId: logWater
+      tags: [water]
+      summary: Log water intake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WaterLogInput"
+      responses:
+        "201":
+          description: Water logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaterLog"
+
+  /water/today:
+    get:
+      operationId: getTodayWater
+      tags: [water]
+      summary: Get today's water intake
+      responses:
+        "200":
+          description: Today's water summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaterSummary"
+
+  /analytics/weekly:
+    get:
+      operationId: getWeeklyAnalytics
+      tags: [analytics]
+      summary: Get weekly analytics breakdown by day
+      responses:
+        "200":
+          description: Weekly analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyAnalytics"
+
+  /analytics/streak:
+    get:
+      operationId: getStreak
+      tags: [analytics]
+      summary: Get current activity streak
+      responses:
+        "200":
+          description: Streak info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakInfo"
 
   /admin/login:
     post:
@@ -456,6 +558,205 @@ components:
         - foodName
         - calories
         - date
+
+    MealSuggestionsInput:
+      type: object
+      properties:
+        remainingCalories:
+          type: number
+        mealType:
+          type: string
+        dietaryPreferences:
+          type: string
+      required:
+        - remainingCalories
+
+    MealSuggestion:
+      type: object
+      properties:
+        name:
+          type: string
+        calories:
+          type: number
+        protein:
+          type: number
+        carbs:
+          type: number
+        fat:
+          type: number
+        description:
+          type: string
+        prepTime:
+          type: string
+      required:
+        - name
+        - calories
+        - description
+
+    MealSuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MealSuggestion"
+        tip:
+          type: string
+      required:
+        - suggestions
+
+    WorkoutRecommendationsInput:
+      type: object
+      properties:
+        todaySteps:
+          type: number
+        weeklySteps:
+          type: number
+        caloriesBurned:
+          type: number
+        fitnessLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+      required:
+        - todaySteps
+
+    WorkoutRecommendation:
+      type: object
+      properties:
+        name:
+          type: string
+        duration:
+          type: string
+        calories:
+          type: number
+        intensity:
+          type: string
+        description:
+          type: string
+        steps:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - duration
+        - description
+
+    WorkoutRecommendationsResponse:
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutRecommendation"
+        motivationalMessage:
+          type: string
+      required:
+        - recommendations
+        - motivationalMessage
+
+    WaterLogInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Amount in ml
+      required:
+        - amount
+
+    WaterLog:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        date:
+          type: string
+        time:
+          type: string
+      required:
+        - id
+        - amount
+        - date
+
+    WaterSummary:
+      type: object
+      properties:
+        totalMl:
+          type: number
+        goalMl:
+          type: number
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/WaterLog"
+        percentage:
+          type: number
+      required:
+        - totalMl
+        - goalMl
+        - logs
+        - percentage
+
+    WeeklyDayData:
+      type: object
+      properties:
+        date:
+          type: string
+        day:
+          type: string
+        steps:
+          type: number
+        caloriesBurned:
+          type: number
+        caloriesConsumed:
+          type: number
+      required:
+        - date
+        - day
+        - steps
+        - caloriesBurned
+        - caloriesConsumed
+
+    WeeklyAnalytics:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeeklyDayData"
+        averageSteps:
+          type: number
+        averageCaloriesBurned:
+          type: number
+        totalSteps:
+          type: number
+        bestDay:
+          type: string
+      required:
+        - days
+        - averageSteps
+        - averageCaloriesBurned
+        - totalSteps
+
+    StreakInfo:
+      type: object
+      properties:
+        currentStreak:
+          type: number
+        longestStreak:
+          type: number
+        lastActiveDate:
+          type: string
+        streakDates:
+          type: array
+          items:
+            type: string
+      required:
+        - currentStreak
+        - longestStreak
+        - streakDates
 
     AdminLoginInput:
       type: object

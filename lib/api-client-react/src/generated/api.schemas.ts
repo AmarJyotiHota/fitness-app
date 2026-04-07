@@ -87,6 +87,99 @@ export interface FoodLog {
   date: string;
 }
 
+export interface MealSuggestionsInput {
+  remainingCalories: number;
+  mealType?: string;
+  dietaryPreferences?: string;
+}
+
+export interface MealSuggestion {
+  name: string;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  description: string;
+  prepTime?: string;
+}
+
+export interface MealSuggestionsResponse {
+  suggestions: MealSuggestion[];
+  tip?: string;
+}
+
+export type WorkoutRecommendationsInputFitnessLevel =
+  (typeof WorkoutRecommendationsInputFitnessLevel)[keyof typeof WorkoutRecommendationsInputFitnessLevel];
+
+export const WorkoutRecommendationsInputFitnessLevel = {
+  beginner: "beginner",
+  intermediate: "intermediate",
+  advanced: "advanced",
+} as const;
+
+export interface WorkoutRecommendationsInput {
+  todaySteps: number;
+  weeklySteps?: number;
+  caloriesBurned?: number;
+  fitnessLevel?: WorkoutRecommendationsInputFitnessLevel;
+}
+
+export interface WorkoutRecommendation {
+  name: string;
+  duration: string;
+  calories?: number;
+  intensity?: string;
+  description: string;
+  steps?: string[];
+}
+
+export interface WorkoutRecommendationsResponse {
+  recommendations: WorkoutRecommendation[];
+  motivationalMessage: string;
+}
+
+export interface WaterLogInput {
+  /** Amount in ml */
+  amount: number;
+}
+
+export interface WaterLog {
+  id: string;
+  amount: number;
+  date: string;
+  time?: string;
+}
+
+export interface WaterSummary {
+  totalMl: number;
+  goalMl: number;
+  logs: WaterLog[];
+  percentage: number;
+}
+
+export interface WeeklyDayData {
+  date: string;
+  day: string;
+  steps: number;
+  caloriesBurned: number;
+  caloriesConsumed: number;
+}
+
+export interface WeeklyAnalytics {
+  days: WeeklyDayData[];
+  averageSteps: number;
+  averageCaloriesBurned: number;
+  totalSteps: number;
+  bestDay?: string;
+}
+
+export interface StreakInfo {
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate?: string;
+  streakDates: string[];
+}
+
 export interface AdminLoginInput {
   username: string;
   password: string;

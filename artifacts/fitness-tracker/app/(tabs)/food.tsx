@@ -15,10 +15,13 @@ import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
+import { useApp } from "@/context/AppContext";
 import {
   useGetFoodLogs,
   useAnalyzeFood,
   useLogFood,
+  useGetMealSuggestions,
+  useGetActivitySummary,
 } from "@workspace/api-client-react";
 
 const TAB_BAR_HEIGHT = Platform.OS === "web" ? 84 : 70;
@@ -36,17 +39,34 @@ interface FoodResult {
   servingSize?: string;
 }
 
+interface MealSuggestionItem {
+  name: string;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  description: string;
+  prepTime?: string;
+}
+
 export default function FoodScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { goals, addXP } = useApp();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<FoodResult | null>(null);
   const [mealType, setMealType] = useState<MealType>("lunch");
+  const [suggestions, setSuggestions] = useState<MealSuggestionItem[] | null>(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionTip, setSuggestionTip] = useState("");
 
   const { data: foodLogs, refetch } = useGetFoodLogs({
     query: { queryKey: ["food", "logs"] },
+  });
+  const { data: summary } = useGetActivitySummary({
+    query: { queryKey: ["activity", "summary"] },
   });
 
   const analyzeMutation = useAnalyzeFood();
@@ -57,11 +77,35 @@ export default function FoodScreen() {
         setImageUri(null);
         setImageBase64(null);
         setResult(null);
+        addXP(20, "food_logged");
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       },
       onError: () => Alert.alert("Error", "Failed to log food"),
     },
   });
+
+  const suggestionsMutation = useGetMealSuggestions({
+    mutation: {
+      onSuccess: (data) => {
+        setSuggestions((data.suggestions ?? []) as MealSuggestionItem[]);
+        setSuggestionTip(data.tip ?? "");
+      },
+      onError: () => Alert.alert("Error", "Failed to get meal suggestions"),
+    },
+  });
+
+  const handleGetSuggestions = async () => {
+    setLoadingSuggestions(true);
+    const consumed = summary?.todayCaloriesConsumed ?? 0;
+    const remaining = Math.max(0, goals.dailyCaloriesConsumed - consumed);
+    try {
+      await suggestionsMutation.mutateAsync({
+        data: { remainingCalories: remaining, mealType },
+      });
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   const pickImage = async () => {
     if (Platform.OS === "web") {
@@ -286,6 +330,72 @@ export default function FoodScreen() {
           </View>
         )}
 
+        {/* AI Meal Suggestions */}
+        <View style={{ marginTop: 28 }}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+            AI Meal Suggestions
+          </Text>
+          <TouchableOpacity
+            style={[styles.suggestionBtn, { backgroundColor: colors.info }]}
+            onPress={handleGetSuggestions}
+            disabled={loadingSuggestions}
+          >
+            {loadingSuggestions ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Feather name="cpu" size={16} color="#fff" />
+                <Text style={[styles.suggestionBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                  Suggest Meals for Remaining Calories
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+          {suggestionTip ? (
+            <View style={[styles.tipCard, { backgroundColor: colors.info + "15", borderColor: colors.info + "30" }]}>
+              <Feather name="info" size={14} color={colors.info} />
+              <Text style={[styles.tipText, { color: colors.info, fontFamily: "Inter_400Regular" }]}>{suggestionTip}</Text>
+            </View>
+          ) : null}
+          {suggestions && suggestions.length > 0 && (
+            <View style={{ gap: 10, marginTop: 10 }}>
+              {suggestions.map((s, i) => (
+                <View key={i} style={[styles.suggestionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View style={styles.suggestionHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.suggestionName, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                        {s.name}
+                      </Text>
+                      <Text style={[styles.suggestionDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                        {s.description}
+                      </Text>
+                    </View>
+                    <View style={[styles.suggestionCalBadge, { backgroundColor: colors.orange + "20" }]}>
+                      <Text style={[styles.suggestionCal, { color: colors.orange, fontFamily: "Inter_700Bold" }]}>
+                        {s.calories}
+                      </Text>
+                      <Text style={[styles.suggestionCalUnit, { color: colors.orange, fontFamily: "Inter_400Regular" }]}>kcal</Text>
+                    </View>
+                  </View>
+                  <View style={styles.suggestionMacros}>
+                    {s.protein != null && <MacroPill label="P" value={s.protein} color={colors.primary} />}
+                    {s.carbs != null && <MacroPill label="C" value={s.carbs} color={colors.success} />}
+                    {s.fat != null && <MacroPill label="F" value={s.fat} color={colors.warning} />}
+                    {s.prepTime && (
+                      <View style={styles.prepTime}>
+                        <Feather name="clock" size={11} color={colors.mutedForeground} />
+                        <Text style={[styles.prepTimeText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                          {s.prepTime}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
         {/* Food Logs */}
         {foodLogs && foodLogs.length > 0 && (
           <>
@@ -322,6 +432,21 @@ export default function FoodScreen() {
     </View>
   );
 }
+
+function MacroPill({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <View style={[macroStyles.pill, { backgroundColor: color + "20" }]}>
+      <Text style={[macroStyles.text, { color, fontFamily: "Inter_600SemiBold" }]}>
+        {label} {value}g
+      </Text>
+    </View>
+  );
+}
+
+const macroStyles = StyleSheet.create({
+  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  text: { fontSize: 11 },
+});
 
 function NutritionBadge({
   label, value, unit, color, colors,
@@ -395,4 +520,34 @@ const styles = StyleSheet.create({
   logThumbPlaceholder: { width: 50, height: 50, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   logFoodName: { fontSize: 15 },
   logCalories: { fontSize: 13, marginTop: 2 },
+  suggestionBtn: {
+    flexDirection: "row",
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  suggestionBtnText: { color: "#fff", fontSize: 14 },
+  tipCard: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 10,
+  },
+  tipText: { flex: 1, fontSize: 13, lineHeight: 18 },
+  suggestionCard: { borderRadius: 14, borderWidth: 1, padding: 14, gap: 10 },
+  suggestionHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  suggestionName: { fontSize: 15, marginBottom: 4 },
+  suggestionDesc: { fontSize: 13, lineHeight: 18 },
+  suggestionCalBadge: { alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  suggestionCal: { fontSize: 20 },
+  suggestionCalUnit: { fontSize: 11 },
+  suggestionMacros: { flexDirection: "row", flexWrap: "wrap", gap: 6, alignItems: "center" },
+  prepTime: { flexDirection: "row", alignItems: "center", gap: 3 },
+  prepTimeText: { fontSize: 11 },
 });

@@ -1,0 +1,97 @@
+You are improving an EXISTING full-stack fitness tracking app (React + Node.js + Express + MongoDB + Gemini API already integrated).
+
+DO NOT rebuild from scratch. Extend the current project cleanly.
+
+----------------------------------
+NEW FEATURES TO ADD:
+
+1. AI SMART FEATURES (Gemini):
+- Add AI Meal Suggestions:
+  - Based on remaining daily calories
+  - Use Gemini API to suggest meals
+- Add AI Workout Recommendations:
+  - Based on user activity history
+- Add Voice Input:
+  - Convert spoken food input into calories using Gemini
+
+----------------------------------
+2. ADVANCED ANALYTICS:
+- Add BMI calculator (height + weight input)
+- Show health category (underweight, normal, overweight)
+- Weekly and monthly reports (charts)
+- Add streak tracking (daily activity consistency)
+
+----------------------------------
+3. REAL ACTIVITY TRACKING:
+- Integrate step tracking using browser/mobile APIs (simulate if not available)
+- Add GPS-based run tracking (distance, speed)
+
+----------------------------------
+4. NUTRITION SYSTEM:
+- Add macro tracking:
+  - Protein, carbs, fats
+- Add water intake tracker with daily goal
+- Add barcode scanner feature (simulate API if needed)
+
+----------------------------------
+5. SOCIAL FEATURES:
+- Add friends system (basic)
+- Leaderboard based on steps/calories
+- Share achievements (simple UI)
+
+----------------------------------
+6. GAMIFICATION:
+- Add XP points system
+- Add levels based on activity
+- Add badges/achievements:
+  - First 5k steps
+  - 7-day streak
+
+----------------------------------
+7. NOTIFICATIONS:
+- Add reminder system:
+  - Steps goal reminder
+  - Water intake reminder
+- Smart suggestions based on user habits
+
+----------------------------------
+8. USER SYSTEM:
+- Add user authentication (JWT-based)
+- Add user profiles (name, weight, height, goals)
+- Store user-specific data securely
+
+----------------------------------
+9. ADMIN PANEL UPGRADE:
+- Improve admin dashboard:
+  - View all users
+  - Analytics overview
+- Add ability to export data (CSV)
+- Add user management (delete/edit users)
+
+----------------------------------
+10. UI/UX IMPROVEMENTS:
+- Add dark/light mode toggle
+- Improve mobile responsiveness
+- Add clean dashboard cards
+- Add loading states and error handling
+
+----------------------------------
+11. PERFORMANCE & STRUCTURE:
+- Refactor code into:
+  - components
+  - services
+  - controllers
+- Optimize API calls
+- Add comments for clarity
+
+----------------------------------
+12. OUTPUT REQUIREMENTS:
+- Modify existing code only (do not break current features)
+- Provide only updated/new files clearly labeled
+- Ensure app runs without errors
+- Include any new dependencies
+- Update README with new features and setup
+
+----------------------------------
+GOAL:
+Transform the existing app into a smart AI-powered fitness ecosystem with tracking, analytics, social features, and gamification.

@@ -14,9 +14,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
+import { useApp } from "@/context/AppContext";
 import {
   useGetActivities,
   useCreateActivity,
+  useGetStreak,
 } from "@workspace/api-client-react";
 
 const TAB_BAR_HEIGHT = Platform.OS === "web" ? 84 : 70;
@@ -24,6 +26,7 @@ const TAB_BAR_HEIGHT = Platform.OS === "web" ? 84 : 70;
 export default function ActivityScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { addXP, checkBadges } = useApp();
   const [steps, setSteps] = useState("");
   const [calories, setCalories] = useState("");
   const [note, setNote] = useState("");
@@ -34,15 +37,23 @@ export default function ActivityScreen() {
     { period },
     { query: { queryKey: ["activities", period] } },
   );
+  const { data: streak, refetch: refetchStreak } = useGetStreak({
+    query: { queryKey: ["analytics", "streak"] },
+  });
 
   const createMutation = useCreateActivity({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (data) => {
         refetch();
+        refetchStreak();
         setSteps("");
         setCalories("");
         setNote("");
         setShowForm(false);
+        addXP(50, "activity_logged");
+        const newSteps = data.steps ?? 0;
+        const currentStreak = streak?.currentStreak ?? 0;
+        checkBadges(newSteps, currentStreak + 1);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       },
       onError: () => {

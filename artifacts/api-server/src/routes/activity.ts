@@ -12,7 +12,7 @@ interface Activity {
 }
 
 // In-memory store (persists for server lifetime)
-const activities: Activity[] = [];
+export const activities: Activity[] = [];
 
 function generateId(): string {
   return Date.now().toString() + Math.random().toString(36).substring(2, 9);
@@ -124,5 +124,4 @@ router.put("/goals", (req: Request, res: Response) => {
   res.json(goals);
 });
 
-export { activities };
 export default router;
