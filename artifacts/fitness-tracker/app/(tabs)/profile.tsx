@@ -17,15 +17,13 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
 import { useUpdateGoals } from "@workspace/api-client-react";
-import { useRouter } from "expo-router";
 
 const TAB_BAR_HEIGHT = Platform.OS === "web" ? 84 : 70;
 
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { goals, setGoals, darkMode, toggleDarkMode, adminToken, setAdminToken } = useApp();
-  const router = useRouter();
+  const { goals, setGoals, darkMode, toggleDarkMode } = useApp();
 
   const [stepGoal, setStepGoal] = useState(String(goals.dailySteps));
   const [burnGoal, setBurnGoal] = useState(String(goals.dailyCaloriesBurned));
@@ -147,57 +145,6 @@ export default function ProfileScreen() {
             />
           </View>
         </View>
-
-        {/* Admin Section */}
-        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 16 }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-            Admin
-          </Text>
-          {adminToken ? (
-            <>
-              <View style={styles.settingRow}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  <Feather name="shield" size={18} color={colors.success} />
-                  <Text style={[styles.settingLabel, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
-                    Logged in as Admin
-                  </Text>
-                </View>
-                <Feather name="check-circle" size={18} color={colors.success} />
-              </View>
-              <TouchableOpacity
-                style={[styles.adminBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-                onPress={() => router.push("/admin/index")}
-              >
-                <Feather name="bar-chart-2" size={16} color={colors.foreground} />
-                <Text style={[styles.adminBtnText, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
-                  Open Admin Dashboard
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.adminBtn, { backgroundColor: colors.destructive + "15", borderColor: colors.destructive + "40" }]}
-                onPress={() => {
-                  setAdminToken(null);
-                  Alert.alert("Logged out", "Admin session ended");
-                }}
-              >
-                <Feather name="log-out" size={16} color={colors.destructive} />
-                <Text style={[styles.adminBtnText, { color: colors.destructive, fontFamily: "Inter_500Medium" }]}>
-                  Logout Admin
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <TouchableOpacity
-              style={[styles.adminBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-              onPress={() => router.push("/admin/login")}
-            >
-              <Feather name="shield" size={16} color={colors.foreground} />
-              <Text style={[styles.adminBtnText, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
-                Admin Login
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
       </ScrollView>
     </View>
   );
@@ -263,14 +210,4 @@ const styles = StyleSheet.create({
   saveBtnText: { color: "#fff", fontSize: 15 },
   settingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 },
   settingLabel: { fontSize: 15 },
-  adminBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 8,
-  },
-  adminBtnText: { fontSize: 14 },
 });

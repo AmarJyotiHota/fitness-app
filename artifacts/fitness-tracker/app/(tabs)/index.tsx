@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
 import { useGetActivitySummary } from "@workspace/api-client-react";
@@ -98,7 +97,6 @@ export default function DashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { goals } = useApp();
-  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: summary, isLoading, refetch } = useGetActivitySummary({
@@ -133,12 +131,6 @@ export default function DashboardScreen() {
               Your Dashboard
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => router.push("/admin/login")}
-            style={[styles.adminBtn, { backgroundColor: colors.secondary }]}
-          >
-            <Feather name="shield" size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
         </View>
 
         {isLoading ? (
@@ -263,7 +255,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
   greeting: { fontSize: 14 },
   title: { fontSize: 26, marginTop: 2 },
-  adminBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   sectionTitle: { fontSize: 17, marginBottom: 12 },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   statCard: {

@@ -12,8 +12,6 @@ interface AppContextType {
   setGoals: (goals: Goals) => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
-  adminToken: string | null;
-  setAdminToken: (token: string | null) => void;
 }
 
 const defaultGoals: Goals = {
@@ -27,14 +25,11 @@ const AppContext = createContext<AppContextType>({
   setGoals: () => {},
   darkMode: false,
   toggleDarkMode: () => {},
-  adminToken: null,
-  setAdminToken: () => {},
 });
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [goals, setGoalsState] = useState<Goals>(defaultGoals);
   const [darkMode, setDarkMode] = useState(false);
-  const [adminToken, setAdminTokenState] = useState<string | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem("goals").then((val) => {
@@ -42,9 +37,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     AsyncStorage.getItem("darkMode").then((val) => {
       if (val === "true") setDarkMode(true);
-    });
-    AsyncStorage.getItem("adminToken").then((val) => {
-      if (val) setAdminTokenState(val);
     });
   }, []);
 
@@ -61,14 +53,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const setAdminToken = (token: string | null) => {
-    setAdminTokenState(token);
-    if (token) AsyncStorage.setItem("adminToken", token);
-    else AsyncStorage.removeItem("adminToken");
-  };
-
   return (
-    <AppContext.Provider value={{ goals, setGoals, darkMode, toggleDarkMode, adminToken, setAdminToken }}>
+    <AppContext.Provider value={{ goals, setGoals, darkMode, toggleDarkMode }}>
       {children}
     </AppContext.Provider>
   );
