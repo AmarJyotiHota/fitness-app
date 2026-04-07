@@ -5,7 +5,8 @@
  * Fitness tracking API with AI calorie detection
  * OpenAPI spec version: 0.1.0
  */
+import type { GetActivitiesPeriod } from "./getActivitiesPeriod";
 
-export interface HealthStatus {
-  status: string;
-}
+export type GetActivitiesParams = {
+  period?: GetActivitiesPeriod;
+};

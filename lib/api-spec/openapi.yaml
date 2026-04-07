@@ -3,20 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Fitness tracking API with AI calorie detection
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: activity
+    description: Activity tracking
+  - name: food
+    description: Food calorie detection
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +29,267 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /activity:
+    post:
+      operationId: createActivity
+      tags: [activity]
+      summary: Add activity entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActivityInput"
+      responses:
+        "201":
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+    get:
+      operationId: getActivities
+      tags: [activity]
+      summary: Get all activity entries
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [day, week, month]
+          required: false
+      responses:
+        "200":
+          description: List of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+
+  /activity/summary:
+    get:
+      operationId: getActivitySummary
+      tags: [activity]
+      summary: Get aggregated activity summary
+      responses:
+        "200":
+          description: Activity summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivitySummary"
+
+  /activity/goals:
+    get:
+      operationId: getGoals
+      tags: [activity]
+      summary: Get user goals
+      responses:
+        "200":
+          description: User goals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goals"
+    put:
+      operationId: updateGoals
+      tags: [activity]
+      summary: Update user goals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Goals"
+      responses:
+        "200":
+          description: Updated goals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goals"
+
+  /food/analyze:
+    post:
+      operationId: analyzeFood
+      tags: [food]
+      summary: Analyze food image with AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FoodAnalyzeInput"
+      responses:
+        "200":
+          description: Food analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FoodAnalysis"
+
+  /food/log:
+    post:
+      operationId: logFood
+      tags: [food]
+      summary: Log a food item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogFoodInput"
+      responses:
+        "201":
+          description: Food logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FoodLog"
+    get:
+      operationId: getFoodLogs
+      tags: [food]
+      summary: Get food logs
+      responses:
+        "200":
+          description: List of food logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FoodLog"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Get admin dashboard data
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/food-logs:
+    get:
+      operationId: adminGetFoodLogs
+      tags: [admin]
+      summary: Get all food logs (admin)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: All food logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FoodLog"
+
+  /admin/food-logs/{id}:
+    delete:
+      operationId: adminDeleteFoodLog
+      tags: [admin]
+      summary: Delete a food log (admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/activities:
+    get:
+      operationId: adminGetActivities
+      tags: [admin]
+      summary: Get all activities (admin)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: All activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+
+  /admin/activities/{id}:
+    delete:
+      operationId: adminDeleteActivity
+      tags: [admin]
+      summary: Delete an activity (admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +299,231 @@ components:
       required:
         - status
 
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+        steps:
+          type: number
+        caloriesBurned:
+          type: number
+        date:
+          type: string
+        note:
+          type: string
+      required:
+        - id
+        - steps
+        - caloriesBurned
+        - date
+
+    CreateActivityInput:
+      type: object
+      properties:
+        steps:
+          type: number
+        caloriesBurned:
+          type: number
+        date:
+          type: string
+        note:
+          type: string
+      required:
+        - steps
+        - caloriesBurned
+
+    ActivitySummary:
+      type: object
+      properties:
+        todaySteps:
+          type: number
+        todayCaloriesBurned:
+          type: number
+        todayCaloriesConsumed:
+          type: number
+        weeklySteps:
+          type: number
+        weeklyCaloriesBurned:
+          type: number
+        weeklyCaloriesConsumed:
+          type: number
+        monthlySteps:
+          type: number
+        recentActivities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
+      required:
+        - todaySteps
+        - todayCaloriesBurned
+        - todayCaloriesConsumed
+        - weeklySteps
+        - weeklyCaloriesBurned
+        - weeklyCaloriesConsumed
+        - monthlySteps
+        - recentActivities
+
+    Goals:
+      type: object
+      properties:
+        dailySteps:
+          type: number
+        dailyCaloriesBurned:
+          type: number
+        dailyCaloriesConsumed:
+          type: number
+      required:
+        - dailySteps
+        - dailyCaloriesBurned
+        - dailyCaloriesConsumed
+
+    FoodAnalyzeInput:
+      type: object
+      properties:
+        imageBase64:
+          type: string
+      required:
+        - imageBase64
+
+    FoodAnalysis:
+      type: object
+      properties:
+        foodName:
+          type: string
+        calories:
+          type: number
+        confidence:
+          type: string
+        protein:
+          type: number
+        carbs:
+          type: number
+        fat:
+          type: number
+        servingSize:
+          type: string
+      required:
+        - foodName
+        - calories
+        - confidence
+
+    LogFoodInput:
+      type: object
+      properties:
+        foodName:
+          type: string
+        calories:
+          type: number
+        imageBase64:
+          type: string
+        protein:
+          type: number
+        carbs:
+          type: number
+        fat:
+          type: number
+        mealType:
+          type: string
+          enum: [breakfast, lunch, dinner, snack]
+      required:
+        - foodName
+        - calories
+
+    FoodLog:
+      type: object
+      properties:
+        id:
+          type: string
+        foodName:
+          type: string
+        calories:
+          type: number
+        imageBase64:
+          type: string
+        protein:
+          type: number
+        carbs:
+          type: number
+        fat:
+          type: number
+        mealType:
+          type: string
+        date:
+          type: string
+      required:
+        - id
+        - foodName
+        - calories
+        - date
+
+    AdminLoginInput:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    AdminLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        message:
+          type: string
+      required:
+        - token
+        - message
+
+    AdminDashboard:
+      type: object
+      properties:
+        totalActivities:
+          type: number
+        totalFoodLogs:
+          type: number
+        totalSteps:
+          type: number
+        totalCaloriesBurned:
+          type: number
+        totalCaloriesConsumed:
+          type: number
+        recentActivities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
+        recentFoodLogs:
+          type: array
+          items:
+            $ref: "#/components/schemas/FoodLog"
+      required:
+        - totalActivities
+        - totalFoodLogs
+        - totalSteps
+        - totalCaloriesBurned
+        - totalCaloriesConsumed
+        - recentActivities
+        - recentFoodLogs
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
