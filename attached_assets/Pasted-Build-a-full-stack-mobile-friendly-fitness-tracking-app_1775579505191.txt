@@ -1,0 +1,104 @@
+Build a full-stack mobile-friendly fitness tracking application with AI-powered food calorie detection.
+
+Tech Stack:
+- Frontend: React (mobile responsive)
+- Backend: Node.js + Express
+- Database: MongoDB (or SQLite)
+- AI Integration: Google Gemini API (for image-based calorie estimation)
+
+----------------------------------
+CORE FEATURES:
+
+1. Fitness Tracking:
+- Track daily steps (manual input or simulated)
+- Track calories burned
+- Store daily activity history
+- Show progress (daily, weekly, monthly)
+- Goal setting with progress bars
+
+2. Food Calorie Detection (AI):
+- Allow user to upload a food image
+- Send the image to Google Gemini API
+- Gemini should:
+  - Identify the food item
+  - Estimate calories
+  - Return structured JSON (food name, calories, confidence)
+- Display result in UI with:
+  - Food name
+  - Estimated calories
+  - Optional nutrition info
+
+3. Dashboard:
+- Show:
+  - Total steps
+  - Calories burned
+  - Calories consumed (from food images)
+- Use charts (Chart.js or Recharts)
+
+----------------------------------
+ADMIN PAGE (IMPORTANT):
+
+4. Admin Authentication:
+- Create a separate Admin Login page
+- Only ONE admin user allowed
+- Store admin credentials securely (use environment variables)
+
+Example:
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=securepassword123
+
+5. Admin Features:
+- View all users' activity
+- View uploaded food images + calorie results
+- Delete or edit user data
+- Dashboard analytics
+
+6. Security:
+- Protect admin routes using middleware
+- Use JWT or session-based authentication
+- Ensure admin page is NOT accessible without login
+
+----------------------------------
+BACKEND API:
+
+Create endpoints:
+- POST /api/activity → Add steps/calories
+- GET /api/activity → Fetch history
+- POST /api/food/upload → Upload image + send to Gemini
+- POST /api/admin/login → Admin login
+- GET /api/admin/dashboard → Admin data (protected)
+
+----------------------------------
+GEMINI INTEGRATION:
+
+- Use Google Gemini Vision API
+- Accept image input (base64 or file upload)
+- Prompt Gemini like:
+  "Analyze this food image and return the food name and estimated calories in JSON format."
+
+----------------------------------
+UI REQUIREMENTS:
+
+- Clean modern UI
+- Mobile-first design
+- Dark mode toggle
+- Separate Admin page (hidden route like /admin)
+
+----------------------------------
+PROJECT STRUCTURE:
+
+- /client → React frontend
+- /server → Express backend
+- /routes, /controllers, /models
+- .env file for API keys and admin credentials
+
+----------------------------------
+OUTPUT:
+
+- Provide full working code
+- Include setup instructions
+- Include .env example
+- Ensure it runs on Replit without errors
+
+Goal:
+Create a smart fitness tracker app with AI-powered calorie detection and a secure admin dashboard.
