@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "FitTrack - Fitness & Calorie Tracker",
-    "slug": "fitness-tracker",
+    "name": "fitlife",
+    "slug": "fitlife",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "fitness-tracker",
+    "scheme": "fitlife",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,9 +14,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fitlife.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.fitlife.app"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
