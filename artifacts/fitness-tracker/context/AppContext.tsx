@@ -59,22 +59,56 @@ const defaultGamification: GamificationState = {
   badges: [],
 };
 
-const XP_PER_LEVEL = 500;
+export const XP_PER_LEVEL = 500;
 
-const ALL_BADGES = [
-  { id: "first_steps", name: "First Steps", description: "Log your first activity", icon: "footprints" },
-  { id: "steps_5k", name: "5K Steps", description: "Walk 5,000 steps in a day", icon: "trending-up" },
-  { id: "steps_10k", name: "10K Steps", description: "Walk 10,000 steps in a day", icon: "zap" },
-  { id: "streak_3", name: "3-Day Streak", description: "Active 3 days in a row", icon: "flame" },
-  { id: "streak_7", name: "Week Warrior", description: "Active 7 days in a row", icon: "award" },
-  { id: "food_tracker", name: "Food Tracker", description: "Log your first meal", icon: "camera" },
-  { id: "water_goal", name: "Hydrated", description: "Reach daily water goal", icon: "droplet" },
+export const RANKS = [
+  { name: "Bronze",   minXP: 0,     color: "#cd7f32", gradient: ["#7a4a1e", "#cd7f32"] },
+  { name: "Silver",   minXP: 500,   color: "#94a3b8", gradient: ["#475569", "#94a3b8"] },
+  { name: "Gold",     minXP: 1500,  color: "#f59e0b", gradient: ["#92400e", "#f59e0b"] },
+  { name: "Platinum", minXP: 3000,  color: "#67e8f9", gradient: ["#164e63", "#67e8f9"] },
+  { name: "Diamond",  minXP: 6000,  color: "#818cf8", gradient: ["#1e1b4b", "#a5b4fc"] },
+  { name: "Mythic",   minXP: 12000, color: "#f472b6", gradient: ["#831843", "#f9a8d4"] },
 ];
 
-const AppContext = createContext<AppContextType>({
+export function getRank(xp: number) {
+  let rank = RANKS[0]!;
+  for (const r of RANKS) {
+    if (xp >= r.minXP) rank = r;
+    else break;
+  }
+  return rank;
+}
+
+export function getNextRank(xp: number) {
+  const idx = RANKS.findIndex((r) => r === getRank(xp));
+  return RANKS[idx + 1] ?? null;
+}
+
+export function getRankProgress(xp: number): number {
+  const current = getRank(xp);
+  const next = getNextRank(xp);
+  if (!next) return 1;
+  const range = next.minXP - current.minXP;
+  const progress = xp - current.minXP;
+  return Math.min(progress / range, 1);
+}
+
+export const ALL_BADGES = [
+  { id: "first_steps",  name: "First Steps",   description: "Log your first activity",    icon: "footprints" },
+  { id: "steps_5k",     name: "5K Warrior",     description: "Walk 5,000 steps in a day",  icon: "trending-up" },
+  { id: "steps_10k",    name: "10K Legend",     description: "Walk 10,000 steps in a day", icon: "zap" },
+  { id: "streak_3",     name: "On Fire",        description: "Active 3 days in a row",     icon: "flame" },
+  { id: "streak_7",     name: "Week Warrior",   description: "7-day streak",               icon: "award" },
+  { id: "food_tracker", name: "Nutrition Pro",  description: "Log your first meal",        icon: "camera" },
+  { id: "water_goal",   name: "Hydrated",       description: "Reach daily water goal",     icon: "droplet" },
+  { id: "silver_rank",  name: "Silver Ranked",  description: "Reach Silver rank",          icon: "shield" },
+  { id: "gold_rank",    name: "Gold Ranked",    description: "Reach Gold rank",            icon: "star" },
+];
+
+export const AppContext = createContext<AppContextType>({
   goals: defaultGoals,
   setGoals: () => {},
-  darkMode: false,
+  darkMode: true,
   toggleDarkMode: () => {},
   profile: defaultProfile,
   setProfile: () => {},
@@ -85,9 +119,10 @@ const AppContext = createContext<AppContextType>({
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [goals, setGoalsState] = useState<Goals>(defaultGoals);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [profile, setProfileState] = useState<UserProfile>(defaultProfile);
   const [gamification, setGamification] = useState<GamificationState>(defaultGamification);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     AsyncStorage.multiGet(["goals", "darkMode", "profile", "gamification"]).then((pairs) => {
@@ -98,21 +133,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (key === "profile") setProfileState(JSON.parse(val) as UserProfile);
         if (key === "gamification") setGamification(JSON.parse(val) as GamificationState);
       });
+      setLoaded(true);
     });
   }, []);
+
+  useEffect(() => {
+    if (loaded) {
+      AsyncStorage.setItem("darkMode", String(darkMode));
+    }
+  }, [darkMode, loaded]);
 
   const setGoals = (g: Goals) => {
     setGoalsState(g);
     AsyncStorage.setItem("goals", JSON.stringify(g));
   };
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const next = !prev;
-      AsyncStorage.setItem("darkMode", String(next));
-      return next;
-    });
-  };
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   const setProfile = (p: UserProfile) => {
     setProfileState(p);
@@ -123,7 +159,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setGamification((prev) => {
       const newXP = prev.xp + amount;
       const newLevel = Math.floor(newXP / XP_PER_LEVEL) + 1;
-      const next = { ...prev, xp: newXP, level: newLevel };
+      const next: GamificationState = { ...prev, xp: newXP, level: newLevel };
       AsyncStorage.setItem("gamification", JSON.stringify(next));
       return next;
     });
@@ -131,7 +167,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const checkBadges = (steps: number, streak: number) => {
     setGamification((prev) => {
-      const existingIds = new Set(prev.badges.map((b) => b.badge_id ?? b.id));
+      const existingIds = new Set(prev.badges.map((b) => b.id));
       const newBadges: Badge[] = [...prev.badges];
       let xpBonus = 0;
 
@@ -141,20 +177,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           if (template) {
             newBadges.push({ ...template, unlockedAt: new Date().toISOString() });
             existingIds.add(id);
-            xpBonus += 100;
+            xpBonus += 150;
           }
         }
       };
 
-      maybeMint("first_steps", steps > 0);
-      maybeMint("steps_5k", steps >= 5000);
-      maybeMint("steps_10k", steps >= 10000);
-      maybeMint("streak_3", streak >= 3);
-      maybeMint("streak_7", streak >= 7);
+      maybeMint("first_steps",  steps > 0);
+      maybeMint("steps_5k",     steps >= 5000);
+      maybeMint("steps_10k",    steps >= 10000);
+      maybeMint("streak_3",     streak >= 3);
+      maybeMint("streak_7",     streak >= 7);
+      maybeMint("silver_rank",  prev.xp + xpBonus >= 500);
+      maybeMint("gold_rank",    prev.xp + xpBonus >= 1500);
 
-      const next = {
-        xp: prev.xp + xpBonus,
-        level: Math.floor((prev.xp + xpBonus) / XP_PER_LEVEL) + 1,
+      const newXP = prev.xp + xpBonus;
+      const next: GamificationState = {
+        xp: newXP,
+        level: Math.floor(newXP / XP_PER_LEVEL) + 1,
         badges: newBadges,
       };
       AsyncStorage.setItem("gamification", JSON.stringify(next));
@@ -175,5 +214,4 @@ export function useApp() {
   return useContext(AppContext);
 }
 
-export { XP_PER_LEVEL, ALL_BADGES };
 export type { Badge, GamificationState, UserProfile };

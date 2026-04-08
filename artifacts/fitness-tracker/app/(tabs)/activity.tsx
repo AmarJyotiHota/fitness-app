@@ -22,6 +22,7 @@ import {
 } from "@workspace/api-client-react";
 
 const TAB_BAR_HEIGHT = Platform.OS === "web" ? 84 : 70;
+const PERIODS = ["day", "week", "month"] as const;
 
 export default function ActivityScreen() {
   const colors = useColors();
@@ -51,27 +52,18 @@ export default function ActivityScreen() {
         setNote("");
         setShowForm(false);
         addXP(50, "activity_logged");
-        const newSteps = data.steps ?? 0;
-        const currentStreak = streak?.currentStreak ?? 0;
-        checkBadges(newSteps, currentStreak + 1);
+        checkBadges(data.steps ?? 0, (streak?.currentStreak ?? 0) + 1);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       },
-      onError: () => {
-        Alert.alert("Error", "Failed to save activity");
-      },
+      onError: () => Alert.alert("Error", "Failed to save activity"),
     },
   });
 
   const handleSubmit = () => {
     const s = parseInt(steps, 10);
     const c = parseFloat(calories);
-    if (!s || !c) {
-      Alert.alert("Validation", "Please enter steps and calories burned");
-      return;
-    }
-    createMutation.mutate({
-      data: { steps: s, caloriesBurned: c, note: note || undefined },
-    });
+    if (!s || !c) { Alert.alert("Validation", "Please enter steps and calories burned"); return; }
+    createMutation.mutate({ data: { steps: s, caloriesBurned: c, note: note || undefined } });
   };
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 16;
@@ -87,54 +79,83 @@ export default function ActivityScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            Activity
-          </Text>
+          <View>
+            <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Activity</Text>
+            <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Track your workouts
+            </Text>
+          </View>
           <TouchableOpacity
-            onPress={() => setShowForm(!showForm)}
             style={[styles.addBtn, { backgroundColor: colors.primary }]}
+            onPress={() => setShowForm(!showForm)}
           >
             <Feather name={showForm ? "x" : "plus"} size={20} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        {/* Add Activity Form */}
+        {/* Streak banner */}
+        {(streak?.currentStreak ?? 0) > 0 && (
+          <View style={[styles.streakBanner, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.streakIconWrap, { backgroundColor: colors.orange + "20" }]}>
+              <Text style={styles.streakFire}>🔥</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.streakNum, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                {streak?.currentStreak ?? 0} Day Streak
+              </Text>
+              <Text style={[styles.streakSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Best: {streak?.longestStreak ?? 0} days · Keep it up!
+              </Text>
+            </View>
+            <View style={[styles.streakXP, { backgroundColor: colors.primary + "20" }]}>
+              <Text style={[styles.streakXPText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>+50 XP</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Add Form */}
         {showForm && (
-          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[styles.formTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-              Log Activity
+              Log Workout
             </Text>
-            <View style={[styles.input, { borderColor: colors.border, backgroundColor: colors.secondary }]}>
-              <Feather name="trending-up" size={16} color={colors.mutedForeground} style={{ marginRight: 8 }} />
-              <TextInput
-                style={[styles.inputText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}
-                placeholder="Steps taken"
-                placeholderTextColor={colors.mutedForeground}
-                value={steps}
-                onChangeText={setSteps}
-                keyboardType="numeric"
-              />
+            <View style={styles.inputRow}>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={[styles.inputLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Steps</Text>
+                <TextInput
+                  style={[styles.input, { color: colors.foreground, backgroundColor: colors.secondary, borderColor: colors.border, fontFamily: "Inter_400Regular" }]}
+                  placeholder="8000"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={steps}
+                  onChangeText={setSteps}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={[styles.inputLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Calories</Text>
+                <TextInput
+                  style={[styles.input, { color: colors.foreground, backgroundColor: colors.secondary, borderColor: colors.border, fontFamily: "Inter_400Regular" }]}
+                  placeholder="320"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={calories}
+                  onChangeText={setCalories}
+                  keyboardType="numeric"
+                />
+              </View>
             </View>
-            <View style={[styles.input, { borderColor: colors.border, backgroundColor: colors.secondary }]}>
-              <Feather name="zap" size={16} color={colors.mutedForeground} style={{ marginRight: 8 }} />
-              <TextInput
-                style={[styles.inputText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}
-                placeholder="Calories burned"
-                placeholderTextColor={colors.mutedForeground}
-                value={calories}
-                onChangeText={setCalories}
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={[styles.input, { borderColor: colors.border, backgroundColor: colors.secondary }]}>
-              <Feather name="edit-2" size={16} color={colors.mutedForeground} style={{ marginRight: 8 }} />
-              <TextInput
-                style={[styles.inputText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}
-                placeholder="Note (optional)"
-                placeholderTextColor={colors.mutedForeground}
-                value={note}
-                onChangeText={setNote}
-              />
+            <Text style={[styles.inputLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Note (optional)</Text>
+            <TextInput
+              style={[styles.input, { color: colors.foreground, backgroundColor: colors.secondary, borderColor: colors.border, fontFamily: "Inter_400Regular" }]}
+              placeholder="Morning run, gym session..."
+              placeholderTextColor={colors.mutedForeground}
+              value={note}
+              onChangeText={setNote}
+            />
+            <View style={styles.xpPreview}>
+              <Feather name="zap" size={14} color={colors.primary} />
+              <Text style={[styles.xpPreviewText, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+                +50 XP for logging this activity
+              </Text>
             </View>
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: colors.primary }]}
@@ -144,81 +165,87 @@ export default function ActivityScreen() {
               {createMutation.isPending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={[styles.submitBtnText, { fontFamily: "Inter_600SemiBold" }]}>Save Activity</Text>
+                <>
+                  <Feather name="check-circle" size={18} color="#fff" />
+                  <Text style={[styles.submitBtnText, { fontFamily: "Inter_600SemiBold" }]}>Log Activity</Text>
+                </>
               )}
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Period Filter */}
-        <View style={styles.periodRow}>
-          {(["day", "week", "month"] as const).map((p) => (
+        {/* Period tabs */}
+        <View style={[styles.periodTabs, { backgroundColor: colors.secondary, borderRadius: 12 }]}>
+          {PERIODS.map((p) => (
             <TouchableOpacity
               key={p}
               onPress={() => setPeriod(p)}
               style={[
-                styles.periodBtn,
-                {
-                  backgroundColor: period === p ? colors.primary : colors.secondary,
-                  borderColor: period === p ? colors.primary : colors.border,
-                },
+                styles.periodTab,
+                period === p && { backgroundColor: colors.primary, borderRadius: 10 },
               ]}
             >
-              <Text
-                style={[
-                  styles.periodBtnText,
-                  {
-                    color: period === p ? "#fff" : colors.mutedForeground,
-                    fontFamily: "Inter_500Medium",
-                  },
-                ]}
-              >
-                {p === "day" ? "Today" : p === "week" ? "Week" : "Month"}
+              <Text style={[
+                styles.periodTabText,
+                { color: period === p ? "#fff" : colors.mutedForeground, fontFamily: "Inter_600SemiBold" },
+              ]}>
+                {p.charAt(0).toUpperCase() + p.slice(1)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Activity List */}
+        {/* Activity list */}
         {isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
-        ) : !activities || activities.length === 0 ? (
-          <View style={styles.empty}>
-            <Feather name="activity" size={48} color={colors.mutedForeground} />
-            <Text style={[styles.emptyText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+          <ActivityIndicator color={colors.primary} style={{ marginTop: 30 }} />
+        ) : (activities ?? []).length === 0 ? (
+          <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.emptyIcon, { backgroundColor: colors.primary + "20" }]}>
+              <Feather name="activity" size={28} color={colors.primary} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
               No activities yet
             </Text>
-            <Text style={[styles.emptySubtext, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Tap the + button to log your first activity
+            <Text style={[styles.emptyText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Start logging your workouts to earn XP and level up your rank!
             </Text>
+            <TouchableOpacity
+              style={[styles.emptyBtn, { backgroundColor: colors.primary }]}
+              onPress={() => setShowForm(true)}
+            >
+              <Text style={[styles.emptyBtnText, { fontFamily: "Inter_600SemiBold" }]}>Log First Activity</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.list}>
-            {activities.map((a) => (
-              <View
-                key={a.id}
-                style={[styles.activityItem, { backgroundColor: colors.card, borderColor: colors.border }]}
-              >
+          <View style={{ gap: 10, marginTop: 16 }}>
+            {(activities ?? []).map((a) => (
+              <View key={a.id} style={[styles.activityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={[styles.activityIcon, { backgroundColor: colors.primary + "20" }]}>
-                  <Feather name="trending-up" size={20} color={colors.primary} />
+                  <Feather name="activity" size={18} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                    <Text style={[styles.activitySteps, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-                      {a.steps.toLocaleString()} steps
-                    </Text>
-                    <Text style={[styles.activityDate, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                      {formatDate(a.date)}
-                    </Text>
-                  </View>
-                  <Text style={[styles.activityCals, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                    {a.caloriesBurned} kcal burned
+                  <Text style={[styles.activityNote, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                    {a.note ?? "Workout"}
                   </Text>
-                  {a.note && (
-                    <Text style={[styles.activityNote, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                      {a.note}
+                  <Text style={[styles.activityDate, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                    {a.date}
+                  </Text>
+                </View>
+                <View style={{ alignItems: "flex-end", gap: 4 }}>
+                  <View style={styles.activityStatRow}>
+                    <Feather name="trending-up" size={12} color={colors.primary} />
+                    <Text style={[styles.activityStat, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                      {a.steps.toLocaleString()}
                     </Text>
-                  )}
+                    <Text style={[styles.activityStatUnit, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>steps</Text>
+                  </View>
+                  <View style={styles.activityStatRow}>
+                    <Feather name="zap" size={12} color={colors.orange} />
+                    <Text style={[styles.activityStat, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                      {a.caloriesBurned}
+                    </Text>
+                    <Text style={[styles.activityStatUnit, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>kcal</Text>
+                  </View>
                 </View>
               </View>
             ))}
@@ -229,53 +256,90 @@ export default function ActivityScreen() {
   );
 }
 
-function formatDate(d: string) {
-  const date = new Date(d + "T00:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = today.getTime() - date.getTime();
-  if (diff < 86400000) return "Today";
-  if (diff < 172800000) return "Yesterday";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingHorizontal: 20 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
   title: { fontSize: 26 },
-  addBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  formCard: { borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 20, gap: 12 },
-  formTitle: { fontSize: 16, marginBottom: 4 },
-  input: {
+  subtitle: { fontSize: 13, marginTop: 2 },
+  addBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginTop: 4 },
+
+  streakBanner: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 18,
+  },
+  streakIconWrap: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
+  streakFire: { fontSize: 24 },
+  streakNum: { fontSize: 16 },
+  streakSub: { fontSize: 12, marginTop: 2 },
+  streakXP: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  streakXPText: { fontSize: 12 },
+
+  form: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 18,
+    marginBottom: 20,
+    gap: 12,
+  },
+  formTitle: { fontSize: 17, marginBottom: 4 },
+  inputRow: { flexDirection: "row", gap: 12 },
+  inputGroup: { gap: 6 },
+  inputLabel: { fontSize: 12 },
+  input: {
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    fontSize: 15,
   },
-  inputText: { flex: 1, fontSize: 15 },
-  submitBtn: { borderRadius: 10, paddingVertical: 13, alignItems: "center" },
-  submitBtnText: { color: "#fff", fontSize: 15 },
-  periodRow: { flexDirection: "row", gap: 8, marginBottom: 20 },
-  periodBtn: { flex: 1, borderRadius: 10, borderWidth: 1, paddingVertical: 8, alignItems: "center" },
-  periodBtnText: { fontSize: 13 },
-  list: { gap: 10 },
-  activityItem: {
+  xpPreview: { flexDirection: "row", alignItems: "center", gap: 6 },
+  xpPreviewText: { fontSize: 13 },
+  submitBtn: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  submitBtnText: { color: "#fff", fontSize: 15 },
+
+  periodTabs: { flexDirection: "row", padding: 4, marginBottom: 4 },
+  periodTab: { flex: 1, paddingVertical: 8, alignItems: "center" },
+  periodTabText: { fontSize: 13 },
+
+  emptyState: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 32,
+    alignItems: "center",
     gap: 12,
-    borderRadius: 14,
+    marginTop: 20,
+  },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
+  emptyTitle: { fontSize: 18 },
+  emptyText: { fontSize: 14, textAlign: "center", lineHeight: 20 },
+  emptyBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24, marginTop: 8 },
+  emptyBtnText: { color: "#fff", fontSize: 15 },
+
+  activityCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 14,
   },
-  activityIcon: { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  activitySteps: { fontSize: 15 },
-  activityDate: { fontSize: 12 },
-  activityCals: { fontSize: 13, marginTop: 2 },
-  activityNote: { fontSize: 12, marginTop: 4, fontStyle: "italic" },
-  empty: { alignItems: "center", justifyContent: "center", paddingTop: 60, gap: 12 },
-  emptyText: { fontSize: 18 },
-  emptySubtext: { fontSize: 14, textAlign: "center" },
+  activityIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  activityNote: { fontSize: 15 },
+  activityDate: { fontSize: 12, marginTop: 2 },
+  activityStatRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  activityStat: { fontSize: 14 },
+  activityStatUnit: { fontSize: 12 },
 });
