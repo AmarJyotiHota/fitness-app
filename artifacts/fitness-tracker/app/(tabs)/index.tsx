@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
@@ -29,7 +30,8 @@ const RANK_ICONS: Record<string, string> = {
 export default function DashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { goals, gamification, profile } = useApp();
+  const { goals, gamification, profile, isPro, isElite } = useApp();
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 16;
 
@@ -157,6 +159,30 @@ export default function DashboardScreen() {
             </View>
           )}
         </View>
+
+        {/* Premium CTA (free users only) */}
+        {!isPro && (
+          <TouchableOpacity
+            style={[styles.premiumCTA, { backgroundColor: colors.primary + "12", borderColor: colors.primary + "40" }]}
+            onPress={() => router.push("/premium")}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.premiumCTALeft, { gap: 10 }]}>
+              <Text style={styles.premiumCTAEmoji}>⚡</Text>
+              <View>
+                <Text style={[styles.premiumCTATitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                  Unlock Pro Features
+                </Text>
+                <Text style={[styles.premiumCTASub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  +25% XP · AI coaching · Muscle ranks
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.premiumCTABtn, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.premiumCTABtnText, { fontFamily: "Inter_700Bold" }]}>Upgrade</Text>
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* Today Stats */}
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
@@ -410,4 +436,20 @@ const styles = StyleSheet.create({
   recentTitle: { fontSize: 14 },
   recentSub: { fontSize: 12, marginTop: 2 },
   recentDate: { fontSize: 11 },
+
+  premiumCTA: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 24,
+  },
+  premiumCTALeft: { flexDirection: "row", alignItems: "center", flex: 1 },
+  premiumCTAEmoji: { fontSize: 26, marginRight: 10 },
+  premiumCTATitle: { fontSize: 15 },
+  premiumCTASub: { fontSize: 12, marginTop: 2 },
+  premiumCTABtn: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  premiumCTABtnText: { color: "#fff", fontSize: 13 },
 });

@@ -26,14 +26,6 @@ const queryClient = new QueryClient({
   },
 });
 
-function RootLayoutNav() {
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
-  );
-}
-
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
@@ -56,7 +48,17 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AppProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
-              <RootLayoutNav />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="premium"
+                  options={{
+                    presentation: "modal",
+                    headerShown: false,
+                    animation: "slide_from_bottom",
+                  }}
+                />
+              </Stack>
             </GestureHandlerRootView>
           </AppProvider>
         </QueryClientProvider>
