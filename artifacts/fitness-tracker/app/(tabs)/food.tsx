@@ -77,7 +77,7 @@ export default function FoodScreen() {
         setImageUri(null);
         setImageBase64(null);
         setResult(null);
-        addXP(20, "food_logged");
+        addXP(20);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       },
       onError: () => Alert.alert("Error", "Failed to log food"),

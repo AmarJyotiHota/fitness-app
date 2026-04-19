@@ -1,16 +1,12 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
+import { requireAuthMiddleware } from "../middleware/auth.js";
+import { db } from "@workspace/db";
+import { waterLogs } from "@workspace/db/schema";
+import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
-interface WaterLog {
-  id: string;
-  amount: number;
-  date: string;
-  time: string;
-}
-
-const waterLogs: WaterLog[] = [];
 const DAILY_GOAL_ML = 2500;
 
 function generateId(): string {
@@ -26,33 +22,48 @@ function getTimeStr(): string {
 }
 
 // POST /api/water/log
-router.post("/log", (req: Request, res: Response) => {
-  const { amount } = req.body as { amount?: number };
-  if (!amount || typeof amount !== "number" || amount <= 0) {
-    res.status(400).json({ error: "amount must be a positive number (ml)" });
-    return;
+router.post("/log", requireAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user.id;
+    const { amount } = req.body as { amount?: number };
+    if (!amount || typeof amount !== "number" || amount <= 0) {
+      res.status(400).json({ error: "amount must be a positive number (ml)" });
+      return;
+    }
+    const [log] = await db.insert(waterLogs).values({
+      id: generateId(),
+      userId,
+      amount,
+      date: getDateStr(),
+      time: getTimeStr(),
+    }).returning();
+    
+    res.status(201).json(log);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to log water" });
   }
-  const log: WaterLog = {
-    id: generateId(),
-    amount,
-    date: getDateStr(),
-    time: getTimeStr(),
-  };
-  waterLogs.push(log);
-  res.status(201).json(log);
 });
 
 // GET /api/water/today
-router.get("/today", (_req: Request, res: Response) => {
-  const today = getDateStr();
-  const todayLogs = waterLogs.filter((w) => w.date === today);
-  const totalMl = todayLogs.reduce((sum, w) => sum + w.amount, 0);
-  res.json({
-    totalMl,
-    goalMl: DAILY_GOAL_ML,
-    logs: todayLogs,
-    percentage: Math.min(Math.round((totalMl / DAILY_GOAL_ML) * 100), 100),
-  });
+router.get("/today", requireAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user.id;
+    const today = getDateStr();
+    const todayLogs = await db.select().from(waterLogs).where(eq(waterLogs.userId, userId)).orderBy(desc(waterLogs.time));
+    
+    // Filter for today
+    const filteredLogs = todayLogs.filter(w => w.date === today);
+    const totalMl = filteredLogs.reduce((sum, w) => sum + w.amount, 0);
+    
+    res.json({
+      totalMl,
+      goalMl: DAILY_GOAL_ML,
+      logs: filteredLogs,
+      percentage: Math.min(Math.round((totalMl / DAILY_GOAL_ML) * 100), 100),
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get water logs" });
+  }
 });
 
 export default router;

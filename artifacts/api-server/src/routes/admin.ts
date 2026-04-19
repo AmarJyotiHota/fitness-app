@@ -1,8 +1,9 @@
 import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { activities } from "./activity.js";
-import { foodLogs } from "./foodStore.js";
+import { db } from "@workspace/db";
+import { activities, foodLogs } from "@workspace/db/schema";
+import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -48,64 +49,69 @@ router.post("/login", (req: Request, res: Response) => {
 });
 
 // GET /api/admin/dashboard
-router.get("/dashboard", requireAdmin, (_req: Request, res: Response) => {
-  const totalSteps = activities.reduce((sum, a) => sum + a.steps, 0);
-  const totalCaloriesBurned = activities.reduce((sum, a) => sum + a.caloriesBurned, 0);
-  const totalCaloriesConsumed = foodLogs.reduce((sum, f) => sum + f.calories, 0);
+router.get("/dashboard", requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const allActivities = await db.select().from(activities).orderBy(desc(activities.date));
+    const allFoodLogs = await db.select().from(foodLogs).orderBy(desc(foodLogs.date));
 
-  res.json({
-    totalActivities: activities.length,
-    totalFoodLogs: foodLogs.length,
-    totalSteps,
-    totalCaloriesBurned,
-    totalCaloriesConsumed,
-    recentActivities: [...activities]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 10),
-    recentFoodLogs: [...foodLogs]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 10),
-  });
+    const totalSteps = allActivities.reduce((sum, a) => sum + a.steps, 0);
+    const totalCaloriesBurned = allActivities.reduce((sum, a) => sum + a.caloriesBurned, 0);
+    const totalCaloriesConsumed = allFoodLogs.reduce((sum, f) => sum + f.calories, 0);
+
+    res.json({
+      totalActivities: allActivities.length,
+      totalFoodLogs: allFoodLogs.length,
+      totalSteps,
+      totalCaloriesBurned,
+      totalCaloriesConsumed,
+      recentActivities: allActivities.slice(0, 10),
+      recentFoodLogs: allFoodLogs.slice(0, 10),
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to load dashboard" });
+  }
 });
 
 // GET /api/admin/food-logs
-router.get("/food-logs", requireAdmin, (_req: Request, res: Response) => {
-  const sorted = [...foodLogs].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
-  res.json(sorted);
+router.get("/food-logs", requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const logs = await db.select().from(foodLogs).orderBy(desc(foodLogs.date));
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to load food logs" });
+  }
 });
 
 // DELETE /api/admin/food-logs/:id
-router.delete("/food-logs/:id", requireAdmin, (req: Request, res: Response) => {
-  const { id } = req.params as { id: string };
-  const idx = foodLogs.findIndex((f) => f.id === id);
-  if (idx === -1) {
-    res.status(404).json({ error: "Food log not found" });
-    return;
+router.delete("/food-logs/:id", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    await db.delete(foodLogs).where(eq(foodLogs.id, id));
+    res.json({ success: true, message: "Food log deleted" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete food log" });
   }
-  foodLogs.splice(idx, 1);
-  res.json({ success: true, message: "Food log deleted" });
 });
 
 // GET /api/admin/activities
-router.get("/activities", requireAdmin, (_req: Request, res: Response) => {
-  const sorted = [...activities].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
-  res.json(sorted);
+router.get("/activities", requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const allActivities = await db.select().from(activities).orderBy(desc(activities.date));
+    res.json(allActivities);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to load activities" });
+  }
 });
 
 // DELETE /api/admin/activities/:id
-router.delete("/activities/:id", requireAdmin, (req: Request, res: Response) => {
-  const { id } = req.params as { id: string };
-  const idx = activities.findIndex((a) => a.id === id);
-  if (idx === -1) {
-    res.status(404).json({ error: "Activity not found" });
-    return;
+router.delete("/activities/:id", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    await db.delete(activities).where(eq(activities.id, id));
+    res.json({ success: true, message: "Activity deleted" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete activity" });
   }
-  activities.splice(idx, 1);
-  res.json({ success: true, message: "Activity deleted" });
 });
 
 export default router;

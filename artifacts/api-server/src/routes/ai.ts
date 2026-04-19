@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { requireAuthMiddleware } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -11,7 +12,7 @@ function getGenAI() {
 }
 
 // POST /api/ai/meal-suggestions
-router.post("/meal-suggestions", async (req: Request, res: Response) => {
+router.post("/meal-suggestions", requireAuthMiddleware, async (req: Request, res: Response) => {
   const { remainingCalories, mealType, dietaryPreferences } = req.body as {
     remainingCalories: number;
     mealType?: string;
@@ -55,7 +56,7 @@ Return ONLY a valid JSON object in this exact format:
 });
 
 // POST /api/ai/workout-recommendations
-router.post("/workout-recommendations", async (req: Request, res: Response) => {
+router.post("/workout-recommendations", requireAuthMiddleware, async (req: Request, res: Response) => {
   const { todaySteps, weeklySteps, caloriesBurned, fitnessLevel } = req.body as {
     todaySteps: number;
     weeklySteps?: number;
